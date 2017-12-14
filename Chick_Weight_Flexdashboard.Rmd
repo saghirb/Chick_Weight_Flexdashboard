@@ -61,8 +61,8 @@ bscols(widths = c(3, NA),
          filter_slider("Weight", "Weight", sdCW, column=~Weight, width = "100%")
        ),
        datatable(sdCW, rownames = FALSE, 
-            options = list(pageLength = 15, search = FALSE, 
-                           deferRender=TRUE, scrollY="100%", scroller=TRUE))
+            options = list(columnDefs = list(list(className = 'dt-center', targets = 0:1)), 
+              pageLength = 15, deferRender=TRUE, scrollY="100%", scroller=TRUE))
 )
 ```
 
@@ -82,7 +82,9 @@ bscols(widths = c(3, NA),
          filter_select("Time", "Time (Days)", sdCWss, ~Time, multiple = TRUE)
        ),
        datatable(sdCWss, rownames = FALSE, 
-            options = list(pageLength = 15, deferRender=TRUE, scrollY="100%", scroller=TRUE))
+            options = list(columnDefs = list(list(className = 'dt-center', targets = 0)), 
+                           pageLength = 15, deferRender=TRUE, scrollY="100%", scroller=TRUE)) %>% 
+         DT::formatRound(c('Mean', 'SD', 'Median'), digits = c(1, 2, 1))
 )
 
 
