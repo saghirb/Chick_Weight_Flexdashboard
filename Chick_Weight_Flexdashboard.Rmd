@@ -1,0 +1,143 @@
+---
+title: "Chick Weight Data"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+# Install the latest packages via github
+# devtools::install_github("rstudio/crosstalk")
+# devtools::install_github("rstudio/DT")
+# devtools::install_github("rstudio/flexdashboard")
+
+library(flexdashboard)
+library(tidyverse)
+library(DT)
+library(crosstalk)
+library(knitr)
+```
+
+```{r CWPrep}
+## Convert ChickWeight data into a tibble with desirable properties
+CW <- ChickWeight %>%
+  as_tibble() %>%
+  mutate(Chick = as.numeric(as.character(Chick))) %>% 
+  mutate(Diet = paste("Diet", as.character(Diet))) %>%
+  rename(Weight = weight) %>%
+  select(Chick, Diet, Time, Weight) %>%
+  arrange(Chick, Diet, Time)
+
+## Range for the slider App
+rWgt <- range(CW$Weight)
+
+# Summary Statistics by Diet and Time
+CW_sum_stats <- CW %>% 
+  group_by(Diet, Time) %>%
+  summarise(N = n(),
+            Mean = mean(Weight),
+            SD = sd(Weight),
+            Min = min(Weight),
+            Median = median(Weight),
+            Max = max(Weight))
+```
+
+Raw Data
+=====================================
+
+```{r rawData}
+# Wrap data frame in SharedData
+sdCW <- SharedData$new(CW)
+
+# Use SharedData like a dataframe with Crosstalk-enabled widgets
+bscols(widths = c(3, NA),
+       list(
+         filter_select("Chick", "Chick IDs", sdCW, ~Chick, multiple = TRUE), 
+         filter_checkbox("Diet", "Diets", sdCW, ~Diet, columns = 2), 
+         filter_select("Time", "Time (Days)", sdCW, ~Time, multiple = TRUE), 
+         filter_slider("Weight", "Weight", sdCW, column=~Weight, width = "100%")
+       ),
+       datatable(sdCW, rownames = FALSE, 
+            options = list(pageLength = 15, search = FALSE, 
+                           deferRender=TRUE, scrollY="100%", scroller=TRUE))
+)
+```
+
+
+Summary Stats
+=====================================
+
+
+```{r sumStats}
+# Wrap data frame in SharedData
+sdCWss <- SharedData$new(CW_sum_stats)
+
+# Use SharedData like a dataframe with Crosstalk-enabled widgets
+bscols(widths = c(3, NA),
+       list(
+         filter_checkbox("Diet", "Diets", sdCWss, ~Diet, columns = 2), 
+         filter_select("Time", "Time (Days)", sdCWss, ~Time, multiple = TRUE)
+       ),
+       datatable(sdCWss, rownames = FALSE, 
+            options = list(pageLength = 15, deferRender=TRUE, scrollY="100%", scroller=TRUE))
+)
+
+
+```
+
+
+   
+Graphs
+=====================================
+
+Column  {.tabset .tabset-fade}
+-------------------------------------
+
+```{r basicPlot}
+g <- ggplot(CW, aes(Time, Weight, colour = Diet)) +
+  scale_x_continuous(breaks=unique(CW$Time)) +
+  scale_y_continuous(breaks=seq(50, 350, by = 50)) +
+  xlab("Time (days)") + 
+  ylab("Weight (grams)") 
+```
+
+
+### Mean Lines (1)
+
+```{r meanLines1}
+g +
+  geom_jitter(size = .4, width = 0.2) +
+  stat_summary(fun.y="mean", geom="line", aes(group=Diet), size=1) +
+  theme(legend.position = "bottom")
+```
+
+### Mean Lines (4)
+
+```{r meanLines4}
+g +
+  facet_wrap(~Diet) +
+  geom_jitter(size = .4, width = 0.2) +
+  stat_summary(fun.y="mean", geom="line", aes(group=Diet), size=1) +
+  theme(legend.position = "none")
+```
+
+### Box Whisker Plot (1)
+
+```{r bwPlot1}
+g +
+  geom_boxplot(aes(group=interaction(Time, Diet))) +
+  theme(legend.position = "bottom")
+```
+
+### Box Whisker Plot (4)
+
+```{r bwPlot4}
+g +
+  facet_wrap(~Diet) +
+  geom_boxplot(aes(group=interaction(Time, Diet))) +
+  theme(legend.position = "none")
+```
+
