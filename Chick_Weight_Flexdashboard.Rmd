@@ -19,6 +19,7 @@ library(tidyverse)
 library(DT)
 library(crosstalk)
 library(knitr)
+library(rmarkdown)
 ```
 
 ```{r CWPrep}
@@ -142,4 +143,15 @@ g +
   geom_boxplot(aes(group=interaction(Time, Diet))) +
   theme(legend.position = "none")
 ```
+
+R Help
+=====================================
+
+```{r rHelp}
+# This is not pretty but needs to be improved.
+helpCW <- help("ChickWeight")
+hcw <- tools:::Rd2txt(utils:::.getHelpFile(as.character(helpCW))) 
+  cat(gsub("_", "", hcw, fixed = TRUE))
+```
+
 
