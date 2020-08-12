@@ -5,7 +5,7 @@ output:
     orientation: columns
     vertical_layout: fill
     social: menu
-    source_code: embed
+    source_code: https://github.com/saghirb/Chick_Weight_Flexdashboard
 ---
 
 ```{r setup, include=FALSE}
